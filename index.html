@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; connect-src 'self' https: http: data:; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Site Audit &amp; Mirror｜GitHub Pages 版 v23</title>
+  <link rel="icon" href="./assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/legacy.css">
+  <link rel="stylesheet" href="./assets/pages.css">
+  <script type="module" src="./assets/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="logo"><div class="logo-title">Site Audit &amp; Mirror</div><div class="logo-sub">網站資訊抓取工具 · Pages v23</div></div>
+    <nav class="nav" aria-label="功能模式">
+      <div class="nav-section">功能模式</div>
+      <button class="nav-btn active" data-mode="audit"><span class="nb-num">1</span><span class="nb-text"><strong>資訊擷取</strong><span>HTML / SEO / 報告</span></span></button>
+      <button class="nav-btn" data-mode="mirror"><span class="nb-num">2</span><span class="nb-text"><strong>靜態鏡像</strong><span>可讀取資源 / 離線 ZIP</span></span></button>
+      <button class="nav-btn" data-mode="images"><span class="nb-num">3</span><span class="nb-text"><strong>圖片擷取</strong><span>壓縮 / 批次 / 打包</span></span></button>
+      <div class="nav-div"></div>
+      <button class="nav-btn" data-mode="settings"><span class="nb-num">⚙</span><span class="nb-text"><strong>設定</strong><span>原格式 / 本機儲存</span></span></button>
+    </nav>
+    <div class="hist-section"><div class="hist-title">本次紀錄（不持久儲存）</div><div id="history"></div></div>
+  </aside>
+  <main class="main">
+    <div class="urlbar"><div class="urlbar-inner"><span class="url-icon">↗</span><input id="url" type="url" aria-label="目標網址" placeholder="https://example.com（匯入 HTML 時用於解析相對路徑）"><span class="version">PAGES v23</span><button id="theme" class="btn-check" title="切換深淺色">深／淺色</button></div></div>
+    <div class="content">
+      <div class="notice">純瀏覽器版：網址與圖片必須允許 CORS 才能讀取。若被阻擋，請使用「HTML 匯入」與本機圖片／資料夾；不會代送帳密、Cookie 或上架密鑰。</div>
+      <section class="panel" id="source-panel">
+        <div class="panel-header">來源</div>
+        <div class="settings-body">
+          <div class="field"><label for="source">讀取方式</label><select class="fsel" id="source"><option value="url">網址（須允許 CORS）</option><option value="html">貼上／匯入 HTML</option><option value="local">本機圖片轉檔</option></select></div>
+          <div id="url-source"><div class="field"><label for="batch">批次多頁</label><input type="checkbox" id="batch"><span class="muted">每行一個網址；圖片結果依頁面分資料夾</span></div><textarea id="batch-urls" aria-label="批次網址" placeholder="https://example.com/page1&#10;https://example.com/page2" hidden></textarea></div>
+          <div id="html-source" hidden><label class="file-btn">匯入 HTML 檔<input type="file" id="html-file" accept=".html,.htm,text/html"></label><textarea id="html-input" aria-label="HTML 原始碼" placeholder="貼上網頁原始碼；不會執行其中的腳本。"></textarea><p class="muted">可從原網頁按 Ctrl+U 複製原始碼，或以瀏覽器另存「網頁，完整」。請在上方填原網址並匯入另存的資源資料夾；無網址時僅使用本機資源。</p></div>
+          <div class="import-row"><label class="file-btn">加入本機圖片／資源<input id="local-files" type="file" multiple></label><label class="file-btn">匯入資源資料夾<input id="local-folder" type="file" webkitdirectory multiple></label><button id="clear-files" class="btn-sm">清除本機檔案</button><span id="file-count" class="muted">尚未匯入</span></div>
+          <p class="muted">單檔上限 30 MB；每次工作上限 250 MB／500 張圖片。檔案僅於此分頁處理，不會上傳。</p>
+        </div>
+      </section>
+      <section class="panel mode-panel" id="mode-audit"><div class="panel-header">設定 — 資訊擷取</div><div class="mode-desc">分析 Meta、標題、連結、圖片、表格、表單、JSON-LD，輸出 HTML 報告＋JSON＋CSV＋原始碼。網址模式額外嘗試 robots.txt／sitemap；未成功會記錄原因。</div><div class="settings-body field"><label for="depth">最多頁數</label><input type="range" id="depth" min="1" max="50" value="1"><output id="depth-val">1 頁</output></div></section>
+      <section class="panel mode-panel" id="mode-mirror" hidden><div class="panel-header">設定 — 靜態鏡像（非完整動態網站）</div><div class="mode-desc">下載可讀取的同網域頁面及 HTML／CSS 引用的資源，改寫連結後打包。受 CORS、登入與動態 JS 限制；缺漏會記錄在 ZIP 的鏡像報告。只開啟你信任的網站副本。</div><div class="settings-body field"><label for="maxpages">最多頁數</label><input id="maxpages" type="range" min="1" max="50" value="5"><output id="maxpages-val">5 頁</output></div></section>
+      <section class="panel mode-panel" id="mode-images" hidden><div class="panel-header">設定 — 圖片擷取</div><div class="mode-desc">擷取 IMG／Lazy-load／srcset／CSS 背景／OG 圖，先依內容驗證格式再預覽。選取後可保留原格式、轉 JPEG／PNG／WebP、壓縮、白底方形、智慧命名與 ZIP。</div></section>
+      <section class="panel mode-panel" id="mode-settings" hidden>
+        <div class="panel-header">偏好設定 — 僅儲存於此瀏覽器</div>
+        <div class="set-section"><div class="set-title">圖片處理</div>
+          <div class="set-row"><label for="format">輸出格式</label><select class="fsel" id="format"><option value="keep">原格式（預設，不重新編碼）</option><option value="image/jpeg">JPEG（相容性最佳）</option><option value="image/png">PNG（無損／透明）</option><option value="image/webp">WebP</option></select></div>
+          <div class="set-row"><label for="compress">壓縮／縮放</label><input type="checkbox" id="compress"><span class="muted">關閉時，指定格式仍會真正轉檔</span></div>
+          <div class="set-row"><label for="quality">壓縮品質</label><input type="range" id="quality" min="30" max="95" step="5" value="80"><output id="quality-val">80%</output></div>
+          <div class="set-row"><label for="max-width">最大寬度</label><select id="max-width" class="fsel"><option value="0">不限制</option><option>2560</option><option>1920</option><option>1280</option><option>800</option><option>400</option></select></div>
+          <div class="set-row"><label for="zip-multiple">多張 ZIP</label><input type="checkbox" id="zip-multiple" checked><span class="muted">關閉時逐檔下載，可能需允許瀏覽器多檔下載</span></div>
+        </div>
+        <div class="set-section"><div class="set-title">擷取的圖片類型（依實際內容）</div><div id="file-types" class="filetypes"></div></div>
+        <div class="set-section"><div class="set-title">既有電商搬遷選項</div>
+          <label class="check-row"><input id="smart-naming" type="checkbox">智慧命名與 bulk_import.csv（SKU／商品名＋序號）</label>
+          <label class="check-row"><input id="standardize" type="checkbox">1:1 白底方形與低解析度標記（GIF 等會轉靜態 JPEG）</label>
+          <label class="check-row"><input id="qa-report" type="checkbox">QA 圖片檢視與失敗清單（附件會統一包 ZIP）</label>
+          <p class="muted">低解析度：任一原始邊長小於 400px。原格式＋壓縮會重新編碼；只有未勾壓縮／標準化的原格式才逐位元保留。</p>
+        </div>
+        <div class="set-section"><button class="btn-save-cfg" id="save-settings">儲存設定</button><button class="btn-sm" id="reset-settings">恢復預設</button><span id="settings-status" role="status"></span></div>
+        <div class="set-section muted">下載位置由瀏覽器管理，無法指定電腦任意路徑。此版不執行真正商品上架、不儲存 API Key，不提供憑證到期日、SSL 降級或登入 Session 抓取；這些請使用桌面版 v22。</div>
+      </section>
+      <div class="run-wrap" id="run-wrap"><button class="btn-run" id="run">開始資訊擷取</button><button class="btn-act" id="cancel" disabled>取消</button></div>
+      <p id="status" class="prog-status" role="status" aria-live="polite">就緒。預設輸出原格式。</p>
+      <section class="panel" id="result-panel" hidden><div class="panel-header">執行結果</div><div id="summary" class="r-grid"></div><div id="actions" class="action-btns"></div><pre id="result-detail"></pre></section>
+      <section class="panel" id="picker" hidden><div class="panel-header">圖片選取器</div><div class="picker-toolbar"><button class="btn-act" id="select-all">全選</button><button class="btn-act" id="select-none">取消全選</button><label>來源 <select id="image-filter"><option value="all">全部</option></select></label><span id="selected-count"></span><button class="btn-act primary" id="export" disabled>下載選取圖片</button></div><p class="muted picker-hint" id="picker-settings"></p><div id="image-grid"></div></section>
+      <section class="panel console-wrap"><div class="con-header"><span class="con-title">執行記錄</span><button class="btn-clear" id="clear-log">清除</button></div><div class="con-body" id="log" role="log"></div></section>
+      <footer class="muted">Site Audit Tool v23 Pages · 所有轉檔與 ZIP 於本機瀏覽器完成 · <a href="./README.md" target="_blank" rel="noopener">操作與部署說明</a></footer>
+    </div>
+  </main>
+  <noscript>此工具需要 JavaScript。請啟用 JavaScript 後重新載入。</noscript>
+</body>
+</html>

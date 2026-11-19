@@ -1,0 +1,11 @@
+{
+  "name": "site-audit-tool-pages",
+  "version": "23.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/unit.test.mjs tests/static.test.mjs",
+    "check": "node --check assets/app.js && node --check assets/parser.js && node --check assets/images.js && node --check assets/mirror.js && node --check assets/zip.js && node --check assets/utils.js",
+    "start": "python3 -m http.server 8080"
+  }
+}
